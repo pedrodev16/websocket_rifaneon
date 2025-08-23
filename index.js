@@ -4,6 +4,9 @@ import express from "express";
 import axios from "axios"; // Para guardar en Laravel
 
 const app = express();
+const API_URL = process.env.API_URL || "http://localhost:8000";
+const PORT = process.env.PORT || 3001;
+
 app.use(express.json());
 
 const server = http.createServer(app);
@@ -26,7 +29,7 @@ io.use(async (socket, next) => {
     if (!token) return next(new Error("No autorizado"));
 
     try {
-        const res = await axios.get("http://localhost:8000/api/user", {
+        const res = await axios.get(`${API_URL}/api/user`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         socket.user = res.data; // Guardas datos del usuario
@@ -59,7 +62,7 @@ io.on('connection', (socket) => {
 
         // Guardar en Laravel
         try {
-            await axios.post('http://localhost:8000/api/chat/messages', msg, {
+            await axios.post(`${API_URL}/api/chat/messages`, msg, {
                 headers: {
                     Authorization: `Bearer ${msg.token}` // si usas auth
                 }
@@ -117,7 +120,6 @@ app.get("/", (req, res) => {
     `;
     res.send(html);
 });
-
 
 
 
