@@ -123,6 +123,6 @@ app.get("/", (req, res) => {
 
 
 
-server.listen(3001, () => {
-    console.log('Servidor Socket.IO en http://localhost:3001');
+server.listen(PORT, () => {
+    console.log(`Servidor Socket.IO corriendo en http://localhost:${PORT}`);
 });
