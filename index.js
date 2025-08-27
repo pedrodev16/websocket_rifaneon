@@ -12,7 +12,7 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "https://rifaneom.netlify.app",
+        origin: "https://rifaneon.netlify.app",
         methods: ["GET", "POST"],
     }
 });
