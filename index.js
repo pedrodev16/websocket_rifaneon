@@ -42,25 +42,63 @@ io.use(async (socket, next) => {
 
 
 
+// Configuración de seguridad
+const userMessageCount = {};
+const forbiddenWords = ["mierda", "estafa", "casinoXXX"]; // ⚡ añade más
+const allowedDomains = ["rifaneon.netlify.app", "rifaneon.alwaysdata.net"];
+
+function sanitizeMessage(text) {
+    let clean = text;
+    forbiddenWords.forEach(word => {
+        const regex = new RegExp(word, "gi");
+        clean = clean.replace(regex, "***");
+    });
+    return clean;
+}
+
 io.on('connection', (socket) => {
     console.log('Cliente conectado', socket.id);
 
-    // Enviar historial de mensajes al nuevo cliente
+    // Enviar historial de mensajes
     socket.emit('chat:init', messages);
 
-    // Recibir mensaje desde cliente
     socket.on('chat:message', async (msg) => {
-        console.log('Mensaje recibido:', msg);
+        const userId = socket.user?.id || socket.id;
+        const now = Date.now();
 
-        // Guardar en memoria (opcional)
+        // 1. Anti-flood: registrar timestamps
+        if (!userMessageCount[userId]) {
+            userMessageCount[userId] = [];
+        }
+        userMessageCount[userId] = userMessageCount[userId].filter(ts => now - ts < 30000);
+        userMessageCount[userId].push(now);
+
+        if (userMessageCount[userId].length > 5) {
+            socket.emit('chat:warning', "🚫 Has enviado demasiados mensajes, espera un momento.");
+            return;
+        }
+
+        // 2. Filtrar texto ofensivo
+        msg.text = sanitizeMessage(msg.text);
+
+        // 3. Bloqueo de links externos
+        if (/https?:\/\//i.test(msg.text)) {
+            let permitido = allowedDomains.some(domain => msg.text.includes(domain));
+            if (!permitido) {
+                socket.emit('chat:warning', "🚫 No puedes enviar enlaces externos.");
+                return;
+            }
+        }
+
+        // 4. Guardar mensaje en memoria
         messages.push(msg);
-        if (messages.length > 50) messages.shift(); // Mantener últimos 50
+        if (messages.length > 50) messages.shift();
 
-        // Difundir a todos los clientes
+        // 5. Difundir mensaje limpio a todos
         io.emit('chat:message', msg);
         console.log('Mensaje emitido a todos los clientes', msg);
 
-        // Guardar en Laravel
+        // 6. Guardar en Laravel
         try {
             await axios.post(`${API_URL}/api/chat/messages`, msg, {
                 headers: {
@@ -76,6 +114,7 @@ io.on('connection', (socket) => {
         console.log('Cliente desconectado', socket.id);
     });
 });
+
 
 // Endpoint para que Laravel envíe eventos
 app.post('/emit', (req, res) => {
@@ -120,8 +159,6 @@ app.get("/", (req, res) => {
     `;
     res.send(html);
 });
-
-
 
 
 
