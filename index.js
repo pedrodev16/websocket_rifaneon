@@ -74,6 +74,9 @@ io.on('connection', (socket) => {
         userMessageCount[userId].push(now);
 
         if (userMessageCount[userId].length > 5) {
+            if (!socket.user) {
+                console.warn('⚠️ socket.user no está definido');
+            }
             console.log('V')
             socket.emit('chat:warning', "🚫 C.");
             return;
