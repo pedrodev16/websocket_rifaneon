@@ -42,7 +42,14 @@ io.use(async (socket, next) => {
 
 // Configuración de seguridad
 const userMessageCount = {};
-const forbiddenWords = ["mierda", "estafa", "casinoXXX"]; // ⚡ añade más
+const forbiddenWords = ["mierda", "estafa", "casinoXXX", "puta", "puto", "imbécil", "idiota",
+    "maldito", "jódete", "hdp", "cabron", "coño", "culiao", "verga", "pene",
+    "vagina", "sexo", "porn", "porno", "xxx", "tetas", "chupame", "violación",
+    "pedofilia", "racista", "nazi", "hitler", "negro de mierda", "judío asqueroso",
+    "estafador", "link sospechoso", "dinero fácil", "apuesta", "casino", "criptoestafa",
+    "trabajo desde casa", "hazte rico", "sin invertir", "solo hoy", "click aquí"
+
+]; // ⚡ añade más
 const allowedDomains = ["rifaneon.netlify.app", "rifaneon.alwaysdata.net"];
 
 
