@@ -74,7 +74,8 @@ io.on('connection', (socket) => {
         userMessageCount[userId].push(now);
 
         if (userMessageCount[userId].length > 5) {
-            socket.emit('chat:warning', "🚫 Has enviado demasiados mensajes, espera un momento.");
+            console.log('V')
+            socket.emit('chat:warning', "🚫 C.");
             return;
         }
 
