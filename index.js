@@ -78,7 +78,7 @@ io.on('connection', (socket) => {
                 console.warn('⚠️ socket.user no está definido');
             }
             console.log('V')
-            socket.emit('chat:warning', "🚫 C.");
+            io.emit('chat:warning', "🚫 C.");
             return;
         }
 
