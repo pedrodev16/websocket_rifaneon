@@ -78,7 +78,7 @@ io.on('connection', (socket) => {
         // 0. Verificar si está silenciado
         const userState = userWarnings[userId] || { count: 0, mutedUntil: null };
         if (userState.mutedUntil && now < userState.mutedUntil) {
-            io.emit('chat:muted', `🔇 Estás silenciado hasta ${new Date(userState.mutedUntil).toLocaleTimeString()}`);
+            io.emit('chat:muted', `🔇 Estás silenciado hasta unos minutos`);
             return;
         }
 
