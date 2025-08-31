@@ -40,12 +40,11 @@ io.use(async (socket, next) => {
 });
 
 
-
-
 // Configuración de seguridad
 const userMessageCount = {};
 const forbiddenWords = ["mierda", "estafa", "casinoXXX"]; // ⚡ añade más
 const allowedDomains = ["rifaneon.netlify.app", "rifaneon.alwaysdata.net"];
+
 
 function sanitizeMessage(text) {
     let clean = text;
@@ -55,37 +54,58 @@ function sanitizeMessage(text) {
     });
     return clean;
 }
+const userWarnings = {}; // { userId: { count: 0, mutedUntil: timestamp } }
+const MAX_WARNINGS = 3;
+const MUTE_DURATION_MS = 5 * 60 * 1000; // 5 minutos
 
 io.on('connection', (socket) => {
     console.log('Cliente conectado', socket.id);
 
     // Enviar historial de mensajes
-    socket.emit('chat:init', messages);
+    io.emit('chat:init', messages);
 
     socket.on('chat:message', async (msg) => {
         const userId = socket.user?.id || socket.id;
         const now = Date.now();
 
-        // 1. Anti-flood: registrar timestamps
-        if (!userMessageCount[userId]) {
-            userMessageCount[userId] = [];
-        }
-        userMessageCount[userId] = userMessageCount[userId].filter(ts => now - ts < 30000);
-        userMessageCount[userId].push(now);
-
-        if (userMessageCount[userId].length > 5) {
-            if (!socket.user) {
-                console.warn('⚠️ socket.user no está definido');
-            }
-            console.log('V')
-            io.emit('chat:warning', "🚫 C.");
+        // 0. Verificar si está silenciado
+        const userState = userWarnings[userId] || { count: 0, mutedUntil: null };
+        if (userState.mutedUntil && now < userState.mutedUntil) {
+            socket.emit('chat:muted', `🔇 Estás silenciado hasta ${new Date(userState.mutedUntil).toLocaleTimeString()}`);
             return;
         }
 
-        // 2. Filtrar texto ofensivo
+        // 1. Anti-flood
+        if (!userMessageCount[userId]) userMessageCount[userId] = [];
+        userMessageCount[userId] = userMessageCount[userId].filter(ts => now - ts < 50000);
+        userMessageCount[userId].push(now);
+
+        if (userMessageCount[userId].length > 5) {
+            socket.emit('chat:warning', "🚫 Has enviado demasiados mensajes, espera un momento.");
+            return;
+        }
+
+        // 2. Detectar lenguaje ofensivo
+        const originalText = msg.text.toLowerCase();
+        const contieneOfensivo = forbiddenWords.some(word => originalText.includes(word));
+        if (contieneOfensivo) {
+            userState.count += 1;
+
+            if (userState.count >= MAX_WARNINGS) {
+                userState.mutedUntil = now + MUTE_DURATION_MS;
+                userWarnings[userId] = userState;
+                socket.emit('chat:muted', `🔇 Has sido silenciado por 5 minutos por lenguaje inapropiado.`);
+                return;
+            } else {
+                userWarnings[userId] = userState;
+                socket.emit('chat:warning', `⚠️ Advertencia ${userState.count}/${MAX_WARNINGS}: lenguaje inapropiado.`);
+            }
+        }
+
+        // 3. Sanitizar texto
         msg.text = sanitizeMessage(msg.text);
 
-        // 3. Bloqueo de links externos
+        // 4. Bloqueo de links externos
         if (/https?:\/\//i.test(msg.text)) {
             let permitido = allowedDomains.some(domain => msg.text.includes(domain));
             if (!permitido) {
@@ -94,20 +114,18 @@ io.on('connection', (socket) => {
             }
         }
 
-        // 4. Guardar mensaje en memoria
+        // 5. Guardar mensaje en memoria
         messages.push(msg);
         if (messages.length > 50) messages.shift();
 
-        // 5. Difundir mensaje limpio a todos
+        // 6. Difundir mensaje limpio
         io.emit('chat:message', msg);
         console.log('Mensaje emitido a todos los clientes', msg);
 
-        // 6. Guardar en Laravel
+        // 7. Guardar en Laravel
         try {
             await axios.post(`${API_URL}/api/chat/messages`, msg, {
-                headers: {
-                    Authorization: `Bearer ${msg.token}` // si usas auth
-                }
+                headers: { Authorization: `Bearer ${msg.token}` }
             });
         } catch (error) {
             console.error('Error guardando mensaje en Laravel:', error.message);
