@@ -67,6 +67,9 @@ const MUTE_DURATION_MS = 5 * 60 * 1000; // 5 minutos
 
 io.on('connection', (socket) => {
     console.log('Cliente conectado', socket.id);
+    console.log(socket);
+
+
 
     // Enviar historial de mensajes
     io.emit('chat:init', messages);
