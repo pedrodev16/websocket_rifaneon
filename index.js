@@ -133,6 +133,7 @@ io.on('connection', (socket) => {
         console.log('Mensaje emitido a todos los clientes', msg);
 
         // 7. Guardar en Laravel
+        console.log(msg);
         try {
             await axios.post(`${API_URL}/api/chat/messages`, msg, {
                 headers: { Authorization: `Bearer ${msg.token}` }
