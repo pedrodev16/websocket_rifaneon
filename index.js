@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
                 return;
             } else {
                 userWarnings[userId] = userState;
-                io.emit('chat:warning', `⚠️ Advertencia ${userState.count}/${MAX_WARNINGS}: lenguaje inapropiado.`);
+                socket.emit('chat:warning', `⚠️ Advertencia ${userState.count}/${MAX_WARNINGS}: lenguaje inapropiado.`);
             }
         }
 
