@@ -71,7 +71,7 @@ io.on('connection', (socket) => {
         // 0. Verificar si está silenciado
         const userState = userWarnings[userId] || { count: 0, mutedUntil: null };
         if (userState.mutedUntil && now < userState.mutedUntil) {
-            socket.emit('chat:muted', `🔇 Estás silenciado hasta ${new Date(userState.mutedUntil).toLocaleTimeString()}`);
+            io.emit('chat:muted', `🔇 Estás silenciado hasta ${new Date(userState.mutedUntil).toLocaleTimeString()}`);
             return;
         }
 
@@ -81,7 +81,7 @@ io.on('connection', (socket) => {
         userMessageCount[userId].push(now);
 
         if (userMessageCount[userId].length > 5) {
-            socket.emit('chat:warning', "🚫 Has enviado demasiados mensajes, espera un momento.");
+            io.emit('chat:warning', "🚫 Has enviado demasiados mensajes, espera un momento.");
             return;
         }
 
@@ -94,11 +94,11 @@ io.on('connection', (socket) => {
             if (userState.count >= MAX_WARNINGS) {
                 userState.mutedUntil = now + MUTE_DURATION_MS;
                 userWarnings[userId] = userState;
-                socket.emit('chat:muted', `🔇 Has sido silenciado por 5 minutos por lenguaje inapropiado.`);
+                io.emit('chat:muted', `🔇 Has sido silenciado por 5 minutos por lenguaje inapropiado.`);
                 return;
             } else {
                 userWarnings[userId] = userState;
-                socket.emit('chat:warning', `⚠️ Advertencia ${userState.count}/${MAX_WARNINGS}: lenguaje inapropiado.`);
+                io.emit('chat:warning', `⚠️ Advertencia ${userState.count}/${MAX_WARNINGS}: lenguaje inapropiado.`);
             }
         }
 
@@ -109,7 +109,7 @@ io.on('connection', (socket) => {
         if (/https?:\/\//i.test(msg.text)) {
             let permitido = allowedDomains.some(domain => msg.text.includes(domain));
             if (!permitido) {
-                socket.emit('chat:warning', "🚫 No puedes enviar enlaces externos.");
+                io.emit('chat:warning', "🚫 No puedes enviar enlaces externos.");
                 return;
             }
         }
