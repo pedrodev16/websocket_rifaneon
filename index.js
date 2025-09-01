@@ -78,7 +78,9 @@ io.on('connection', (socket) => {
         const userId = socket.user?.id || socket.id;
         const now = Date.now();
 
-
+        setTimeout(() => {
+            socket.emit('chat:muted', '🔇 Prueba de mute');
+        }, 3000);
 
 
         // 0. Verificar si está silenciado
