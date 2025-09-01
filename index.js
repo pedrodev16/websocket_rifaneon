@@ -96,7 +96,7 @@ io.on('connection', (socket) => {
         }
 
         // 2. Detectar lenguaje ofensivo
-        const originalText = msg.text.toLowerCase();
+        const originalText = msg.message.toLowerCase();
         const contieneOfensivo = forbiddenWords.some(word => originalText.includes(word));
         if (contieneOfensivo) {
             userState.count += 1;
@@ -113,11 +113,11 @@ io.on('connection', (socket) => {
         }
 
         // 3. Sanitizar texto
-        msg.text = sanitizeMessage(msg.text);
+        msg.message = sanitizeMessage(msg.message);
 
         // 4. Bloqueo de links externos
-        if (/https?:\/\//i.test(msg.text)) {
-            let permitido = allowedDomains.some(domain => msg.text.includes(domain));
+        if (/https?:\/\//i.test(msg.message)) {
+            let permitido = allowedDomains.some(domain => msg.message.includes(domain));
             if (!permitido) {
                 io.emit('chat:warning', "🚫 No puedes enviar enlaces externos.");
                 return;
