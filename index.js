@@ -78,16 +78,19 @@ io.on('connection', (socket) => {
         const userId = socket.user?.id || socket.id;
         const now = Date.now();
 
-        setTimeout(() => {
-            socket.emit('chat:muted', '🔇 Prueba de mute');
-        }, 3000);
+
 
 
         // 0. Verificar si está silenciado
         const userState = userWarnings[userId] || { count: 0, mutedUntil: null };
         if (userState.mutedUntil && now < userState.mutedUntil) {
             console.log('Silenciando a usuario:', userId, 'Socket ID:', socket.id);
-            socket.emit('chat:muted', `🔇 Estás silenciado hasta unos minutos`);
+            io.emit('chat:muted', {
+                userId: userId,
+                message: '🔇 Estás silenciado hasta unos minutos'
+            });
+
+
             return;
         }
 
