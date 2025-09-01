@@ -100,7 +100,11 @@ io.on('connection', (socket) => {
         userMessageCount[userId].push(now);
 
         if (userMessageCount[userId].length > 5) {
-            io.emit('chat:warning', "🚫 Has enviado demasiados mensajes, espera un momento.");
+
+            io.emit('chat:warning', {
+                userId: userId,
+                message: '🚫 Has enviado demasiados mensajes, espera un momento.'
+            });
             return;
         }
 
@@ -113,11 +117,21 @@ io.on('connection', (socket) => {
             if (userState.count >= MAX_WARNINGS) {
                 userState.mutedUntil = now + MUTE_DURATION_MS;
                 userWarnings[userId] = userState;
-                io.emit('chat:muted', `🔇 Has sido silenciado por 5 minutos por lenguaje inapropiado.`);
+
+                io.emit('chat:muted', {
+                    userId: userId,
+                    message: '🔇 Has sido silenciado por 5 minutos por lenguaje inapropiado.'
+                });
+
                 return;
             } else {
                 userWarnings[userId] = userState;
-                socket.emit('chat:warning', `⚠️ Advertencia ${userState.count}/${MAX_WARNINGS}: lenguaje inapropiado.`);
+
+                io.emit('chat:warning', {
+                    userId: userId,
+                    message: `⚠️ Advertencia ${userState.count}/${MAX_WARNINGS}: lenguaje inapropiado.`
+                });
+
             }
         }
 
