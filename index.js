@@ -12,8 +12,12 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "https://rifaneon.netlify.app",
-        methods: ["GET", "POST"],
+        origin: [
+            "https://rifaneon.netlify.app",
+            "http://localhost:3000",
+            "https://1234adminrifaneon.alwaysdata.net"
+        ],
+        methods: ["GET", "POST"]
     }
 });
 
